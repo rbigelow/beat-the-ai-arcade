@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+:root {
+  --georgian-blue: #004b87;
+  --georgian-green: #64a70b;
+  --georgian-teal: #00778b;
+  --georgian-light-blue: #77c5d5;
+  --georgian-dark-grey: #333f48;
+  --georgian-orange: #e57200;
+  --georgian-yellow: #f3d03e;
+  --georgian-neutral: #c4bfb6;
+  --white: #ffffff;
+
+  --arcade-background: #061523;
+  --arcade-card: #0b2235;
+}
+
+@theme {
+  --color-georgian-blue: #004b87;
+  --color-georgian-green: #64a70b;
+  --color-georgian-teal: #00778b;
+  --color-georgian-light-blue: #77c5d5;
+  --color-georgian-dark-grey: #333f48;
+  --color-georgian-orange: #e57200;
+  --color-georgian-yellow: #f3d03e;
+  --color-georgian-neutral: #c4bfb6;
+  --color-arcade-bg: #061523;
+  --color-arcade-card: #0b2235;
+  --radius-card: 28px;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--arcade-background);
+  color: var(--white);
+  font-family: Arial, Helvetica, system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 4px solid var(--georgian-yellow);
+  outline-offset: 3px;
+}
+
+button,
+[role="button"] {
+  min-height: 48px;
+  touch-action: manipulation;
+}
+
+canvas {
+  touch-action: none;
+}
+
+.arcade-card {
+  background: var(--arcade-card);
+  border: 1px solid rgb(119 197 213 / 0.25);
+  border-radius: 28px;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 56px;
+  min-width: 56px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  transition: transform 200ms ease, background-color 200ms ease, opacity 200ms ease;
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); }
+.btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background: var(--georgian-green); color: #06210a; }
+.btn-blue { background: var(--georgian-blue); color: #fff; border: 2px solid var(--georgian-light-blue); }
+.btn-ghost { background: transparent; color: #fff; border: 2px solid rgb(255 255 255 / 0.5); }
+.btn-danger { background: var(--georgian-orange); color: #1d0d00; }
+
+.flow-dot { animation: flow 1.4s linear infinite; }
+@keyframes flow {
+  0% { transform: translateY(-6px); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(14px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .flow-dot { display: none; }
+}
