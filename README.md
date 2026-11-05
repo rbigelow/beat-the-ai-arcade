@@ -1,3 +1,6 @@
+
+![BEAT THE AI ARCADE logo](https://raw.githubusercontent.com/rbigelow/beat-the-ai-arcade/refs/heads/main/public/logo.png)
+
 # BEAT THE AI ARCADE
 
 > **Can you beat the AI?**
