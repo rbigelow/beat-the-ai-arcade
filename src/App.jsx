@@ -16,6 +16,7 @@ export default function App() {
   const [stats, setStats] = useState(EMPTY_STATS)
   const [kioskMode, setKioskMode] = useState(true)
   const [soundOn, setSoundOn] = useState(false)
+  const [darkMode, setDarkMode] = useState(true)
 
   const openGame = useCallback((id) => {
     setStats((s) => ({ ...s, gamesPlayed: s.gamesPlayed + 1 }))
@@ -46,7 +47,28 @@ export default function App() {
   const game = GAMES.find((g) => g.id === gameId)
 
   return (
-    <div className="min-h-screen bg-arcade-bg text-white">
+    <div className={`min-h-screen ${darkMode ? 'bg-arcade-bg text-white' : 'bg-slate-100 text-slate-900'}`}>
+      <style>{`
+        [data-app-theme="light"] [class~="text-white"],
+        [data-app-theme="light"] [class~="text-gray-100"],
+        [data-app-theme="light"] [class~="text-slate-100"] { color: #1e293b !important; }
+        [data-app-theme="light"] [class~="bg-arcade-bg"],
+        [data-app-theme="light"] [class~="bg-slate-900"],
+        [data-app-theme="light"] [class~="bg-gray-900"],
+        [data-app-theme="light"] [class~="bg-black"] { background-color: #f1f5f9 !important; }
+        [data-app-theme="light"] [class~="border-slate-700"],
+        [data-app-theme="light"] [class~="border-gray-700"] { border-color: #cbd5e1 !important; }
+      `}</style>
+      <div data-app-theme={darkMode ? 'dark' : 'light'} className="min-h-screen">
+      <button
+        type="button"
+        onClick={() => setDarkMode((enabled) => !enabled)}
+        aria-label={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
+        aria-pressed={!darkMode}
+        className="fixed right-4 top-4 z-50 rounded-lg border border-slate-500 bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow"
+      >
+        {darkMode ? 'Light mode' : 'Dark mode'}
+      </button>
       {game ? (
         <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
           <ErrorBoundary key={`${game.id}-${runKey}`} onBack={goHome}>
@@ -67,6 +89,7 @@ export default function App() {
         />
       )}
       {idle.warning && <IdleReset secondsLeft={idle.secondsLeft} onStay={idle.stay} />}
+      </div>
     </div>
   )
 }

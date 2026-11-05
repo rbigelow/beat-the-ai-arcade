@@ -17,9 +17,8 @@ export default function ArcadeHome({ games, onSelect, stats, kioskMode, onToggle
 
       <main className="mt-12">
         <section className="text-center">
-          <h1 className="text-5xl font-black tracking-tight sm:text-7xl">BEAT THE AI ARCADE</h1>
-          <h2 className="mt-3 text-3xl font-bold text-georgian-green sm:text-4xl">Can you beat the AI?</h2>
-          <p className="mx-auto mt-6 max-w-3xl text-xl leading-relaxed text-white/90">
+          
+          <p className="mx-auto mt-6 max-w-4xl text-xl leading-relaxed text-white/90">
             Test your skills against artificial intelligence through quick interactive challenges. Discover how AI sees, learns, searches, listens, predicts and sometimes gets things wrong.
           </p>
           <dl className="mt-8 flex flex-wrap justify-center gap-4" aria-label="Session statistics">

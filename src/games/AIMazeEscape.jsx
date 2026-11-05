@@ -6,7 +6,7 @@ import ErrorPanel from '../components/ErrorPanel.jsx'
 import { ALGORITHMS, createSearch, generateMaze, keyOf } from '../ai/mazeAlgorithms.js'
 import { playSfx } from '../utils/sfx.js'
 
-const SIZES = [15, 21, 31]
+const SIZES = [15, 21, 31, 64, 128]
 const SPEEDS = [{ label: 'SLOW', steps: 0.25 }, { label: 'NORMAL', steps: 1 }, { label: 'FAST', steps: 3 }, { label: 'MAX', steps: 12 }]
 const CANVAS_PX = 600
 const COLORS = {
@@ -109,6 +109,7 @@ export default function AIMazeEscape({ game, onBack }) {
   const [size, setSize] = useState(21)
   const [algorithms, setAlgorithms] = useState(['bfs', 'astar'])
   const [sideBySide, setSideBySide] = useState(true)
+  const [autoReplay, setAutoReplay] = useState(true)
   const [speedIndex, setSpeedIndex] = useState(1)
   const [paused, setPaused] = useState(false)
   const [seed, setSeed] = useState(() => Date.now())
@@ -170,10 +171,13 @@ export default function AIMazeEscape({ game, onBack }) {
   }, [size, seed, replay, sideBySide, algorithms[0], algorithms[1]])
 
   useEffect(() => {
-    if (!allDone || paused) return undefined
-    const timer = setTimeout(() => setSeed(Date.now()), 12000)
+    if (!allDone || paused || !autoReplay) return undefined
+    const timer = setTimeout(() => {
+      setAllDone(false)
+      setSeed(Date.now())
+    }, 4000)
     return () => clearTimeout(timer)
-  }, [allDone, paused, seed, replay])
+  }, [allDone, paused, autoReplay, seed, replay])
 
   const newMaze = () => {
     setError(null)
@@ -209,6 +213,7 @@ export default function AIMazeEscape({ game, onBack }) {
           <button type="button" className="btn btn-primary" onClick={newMaze}><RefreshCw aria-hidden="true" size={22} /> NEW MAZE</button>
           <button type="button" className="btn btn-ghost" onClick={() => setReplay((r) => r + 1)}><RotateCcw aria-hidden="true" size={22} /> REPLAY</button>
           <button type="button" className="btn btn-ghost" aria-pressed={sideBySide} onClick={() => setSideBySide(!sideBySide)}>SIDE-BY-SIDE: {sideBySide ? 'ON' : 'OFF'}</button>
+          <button type="button" className="btn btn-ghost" aria-pressed={autoReplay} onClick={() => setAutoReplay(!autoReplay)}>AUTO REPLAY: {autoReplay ? 'ON' : 'OFF'}</button>
           <label className="text-sm font-bold">ALGORITHM {sideBySide ? 'LEFT' : ''}
             <select className="mt-1 block min-h-12 rounded-xl bg-white px-3 text-black" value={algorithms[0]} onChange={(e) => setAlgorithms([e.target.value, algorithms[1]])}>
               {Object.values(ALGORITHMS).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -258,7 +263,7 @@ export default function AIMazeEscape({ game, onBack }) {
         <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold" aria-label="Legend">
           <li>S Start (blue)</li><li>G Goal (green)</li><li>█ Wall (dark grey)</li><li>· Explored (light blue)</li><li>+ Frontier (yellow)</li><li>◎ Current (orange)</li><li>● Final route (green)</li><li>╱ Mud: costs 5 instead of 1</li>
         </ul>
-        {allDone && <p className="mt-3 text-georgian-neutral">Both searches finished. A new maze will start automatically.</p>}
+        {allDone && <p className="mt-3 text-georgian-neutral">Both searches finished. {autoReplay ? 'A new maze will start automatically.' : 'Auto replay is off.'}</p>}
       </section>
       <BehindTheScenes
         summary="The algorithm keeps a list of cells to visit (the frontier), picks the next one, and repeats until the goal is reached. Then it walks backwards to draw the route."
