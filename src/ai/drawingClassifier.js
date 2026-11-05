@@ -1,10 +1,30 @@
 // Drawing classifier architecture: preprocessing is real; the classifier is pluggable.
-// - A TensorFlow.js model placed at public/models/drawing/ (model.json + metadata.json) is used if present.
-// - Otherwise a clearly-labelled DEMO classifier is used. Its output is simulated, NOT real recognition.
+// - DEMO MODE (default) uses a clearly-labelled simulated classifier. Its output is NOT real recognition.
+// - With demo mode off, a TensorFlow.js model is loaded for the chosen input size (28 or 256):
+//   1. local:  public/models/drawing/<size>/ (model.json + metadata.json), 28 also checks public/models/drawing/
+//   2. remote: VITE_QUICKDRAW_MODEL_URL_<size> (URL of a model.json; metadata.json must sit beside it)
+//   If neither works, loading fails with a clear error. It never silently simulates.
 import { loadTensorFlow } from './audioClassifier.js'
 import { DRAWING_PROMPTS } from '../data/drawingPrompts.js'
 
 export const DRAWING_INPUT_SIZE = 28
+export const DRAWING_INPUT_SIZES = [28, 256]
+
+export const DRAWING_MODEL_DOWNLOADS = {
+  28: {
+    localPath: 'public/models/drawing/28/',
+    remoteEnv: 'VITE_QUICKDRAW_MODEL_URL_28',
+    remoteUrl: import.meta.env.VITE_QUICKDRAW_MODEL_URL_28,
+  },
+  256: {
+    localPath: 'public/models/drawing/256/',
+    remoteEnv: 'VITE_QUICKDRAW_MODEL_URL_256',
+    remoteUrl: import.meta.env.VITE_QUICKDRAW_MODEL_URL_256,
+  },
+}
+
+export const QUICKDRAW_DATASET_URL = 'https://github.com/googlecreativelab/quickdraw-dataset'
+export const QUICKDRAW_BITMAP_URL = 'https://console.cloud.google.com/storage/browser/quickdraw_dataset/full/numpy_bitmap'
 
 export function isCanvasEmpty(canvas) {
   const ctx = canvas.getContext('2d')
@@ -14,16 +34,16 @@ export function isCanvasEmpty(canvas) {
 }
 
 /** Resize drawing to 28x28 and normalise ink to 0..1 (1 = ink). Returns Float32Array. */
-export function preprocessDrawing(canvas) {
+export function preprocessDrawing(canvas, size = DRAWING_INPUT_SIZE) {
   const small = document.createElement('canvas')
-  small.width = DRAWING_INPUT_SIZE
-  small.height = DRAWING_INPUT_SIZE
+  small.width = size
+  small.height = size
   const ctx = small.getContext('2d', { willReadFrequently: true })
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, small.width, small.height)
   ctx.drawImage(canvas, 0, 0, small.width, small.height)
   const { data } = ctx.getImageData(0, 0, small.width, small.height)
-  const pixels = new Float32Array(DRAWING_INPUT_SIZE * DRAWING_INPUT_SIZE)
+  const pixels = new Float32Array(size * size)
   for (let i = 0; i < pixels.length; i += 1) pixels[i] = 1 - data[i * 4] / 255
   return { pixels, preview: small }
 }
@@ -54,27 +74,47 @@ export function createDemoClassifier() {
   }
 }
 
-export async function loadDrawingClassifier() {
-  const base = `${import.meta.env.BASE_URL}models/drawing`
-  try {
-    const meta = await fetch(`${base}/metadata.json`)
-    if (!meta.ok) throw new Error('no metadata')
-    const { classes } = await meta.json()
-    const tf = await loadTensorFlow()
-    const model = await tf.loadLayersModel(`${base}/model.json`)
-    return {
-      mode: 'model',
-      classify(pixels) {
-        return tf.tidy(() => {
-          const out = model.predict(tf.tensor4d(Array.from(pixels), [1, DRAWING_INPUT_SIZE, DRAWING_INPUT_SIZE, 1]))
-          const probs = Array.from(out.dataSync())
-          return classes.map((id, i) => ({ id, label: id, probability: probs[i] ?? 0 }))
-            .sort((a, b) => b.probability - a.probability)
-        })
-      },
-      dispose() { model.dispose() },
-    }
-  } catch {
-    return createDemoClassifier()
+async function tryLoadModel(base, size) {
+  const meta = await fetch(`${base}/metadata.json`)
+  if (!meta.ok) throw new Error('no metadata')
+  const { classes } = await meta.json()
+  if (!Array.isArray(classes) || classes.length === 0) throw new Error('metadata has no classes')
+  const tf = await loadTensorFlow()
+  const model = await tf.loadLayersModel(`${base}/model.json`)
+  const shape = model.inputs[0].shape
+  if (shape[1] !== size || shape[2] !== size) {
+    model.dispose()
+    throw new Error(`model expects ${shape[1]}x${shape[2]} input, not ${size}x${size}`)
   }
+  return {
+    mode: 'model',
+    inputSize: size,
+    classify(pixels) {
+      return tf.tidy(() => {
+        const out = model.predict(tf.tensor4d(Array.from(pixels), [1, size, size, 1]))
+        const probs = Array.from(out.dataSync())
+        return classes.map((id, i) => ({ id, label: id, probability: probs[i] ?? 0 }))
+          .sort((a, b) => b.probability - a.probability)
+      })
+    },
+    dispose() { model.dispose() },
+  }
+}
+
+/** Loads a real model for `size`. Resolves { classifier, source } or rejects with an Error (never simulates). */
+export async function loadDrawingClassifier(size = DRAWING_INPUT_SIZE) {
+  const root = `${import.meta.env.BASE_URL}models/drawing`
+  const candidates = [{ base: `${root}/${size}`, source: 'local' }]
+  if (size === 28) candidates.push({ base: root, source: 'local' })
+  const remote = DRAWING_MODEL_DOWNLOADS[size]?.remoteUrl
+  if (remote) candidates.push({ base: remote.replace(/\/model\.json$/, ''), source: 'remote' })
+  const failures = []
+  for (const { base, source } of candidates) {
+    try {
+      return { classifier: await tryLoadModel(base, size), source }
+    } catch (error) {
+      failures.push(`${base}: ${error.message}`)
+    }
+  }
+  throw new Error(`No ${size}×${size} drawing model could be loaded. Tried ${failures.join('; ')}`)
 }

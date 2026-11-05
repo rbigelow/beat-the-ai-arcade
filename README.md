@@ -130,6 +130,19 @@ Place the **authorised** Georgian College logo at `public/logo.png`. It is shown
 
 If no valid model is found, **Guided Training Mode** records about 8 examples per sound from the microphone (or generates sample sounds in Sample Sound Mode) and trains a small TensorFlow.js model in the browser. The standard Speech Commands model is **not** claimed to recognise claps, whistles or snaps. Nothing ever falls back to random predictions: without a model, only the real waveform/spectrogram are shown, labelled **AUDIO SIGNAL DEMO**.
 
+### Drawing Recognition: demo mode, model size and Quick, Draw! models
+
+The game starts with **DEMO MODE ON** (simulated predictions, clearly labelled). Use the **DEMO MODE** switch on the screen to turn it off, and the **Model input size** dropdown to choose **28×28** or **256×256**.
+
+With demo mode off, the game loads a real TensorFlow.js model, in this order:
+
+1. **Local:** `public/models/drawing/<size>/` (`model.json`, `*.bin`, `metadata.json`). For 28×28, `public/models/drawing/` is also checked.
+2. **Remote (optional):** the URL of a hosted `model.json` set in `.env.local` as `VITE_QUICKDRAW_MODEL_URL_28` or `VITE_QUICKDRAW_MODEL_URL_256`, with `metadata.json` beside it. Rebuild after changing it.
+
+If neither works, the game shows *what happened / how to fix it*, **RETRY**, and download links. It **never** silently falls back to simulated output.
+
+`metadata.json` must list the class names in output order, e.g. `{ "classes": ["cat", "car", "house"] }`. The model input must be `[null, size, size, 1]` with ink = 1 on a blank = 0 background (the same convention as Quick, Draw! bitmaps). Models trained on the official [Quick, Draw! dataset](https://github.com/googlecreativelab/quickdraw-dataset) ([28×28 bitmaps](https://console.cloud.google.com/storage/browser/quickdraw_dataset/full/numpy_bitmap)) and converted with `tensorflowjs_converter` fit this contract. Google does not publish an official pretrained TF.js Quick, Draw! model, so no model is bundled or auto-downloaded; supply your own or a community one that you have checked for licence and format.
+
 To change the program QR code placeholder, set `VITE_PROGRAM_URL` (for example in `.env.local`) to an authorised URL; nothing is invented by default.
 
 ## Camera and microphone permissions
