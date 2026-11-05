@@ -3,7 +3,7 @@ import { useState } from 'react'
 const LOGO_URL = `${import.meta.env.BASE_URL}logo.png`
 
 /** Shows the authorised /logo.png, or a neutral same-size placeholder if it is missing. */
-export default function Logo({ className = 'h-75' }) {
+export default function Logo({ className = 'h-100' }) {
   const [missing, setMissing] = useState(false)
   if (missing) {
     return (

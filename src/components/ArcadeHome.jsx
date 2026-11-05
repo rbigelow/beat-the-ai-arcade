@@ -18,9 +18,7 @@ export default function ArcadeHome({ games, onSelect, stats, kioskMode, onToggle
       <main className="mt-12">
         <section className="text-center">
           
-          <p className="mx-auto mt-6 max-w-4xl text-xl leading-relaxed text-white/90">
-            Test your skills against artificial intelligence through quick interactive challenges. Discover how AI sees, learns, searches, listens, predicts and sometimes gets things wrong.
-          </p>
+
           <dl className="mt-8 flex flex-wrap justify-center gap-4" aria-label="Session statistics">
             <div className="arcade-card px-8 py-3"><dt className="text-xs font-black tracking-widest text-georgian-neutral">GAMES PLAYED</dt><dd className="text-3xl font-black text-georgian-yellow">{stats.gamesPlayed}</dd></div>
             <div className="arcade-card px-8 py-3"><dt className="text-xs font-black tracking-widest text-georgian-neutral">BEST SCORE</dt><dd className="text-3xl font-black text-georgian-yellow">{stats.best ? `${stats.best.score}/${stats.best.outOf}` : '—'}</dd></div>
