@@ -10,11 +10,15 @@ import { DRAWING_PROMPTS } from '../data/drawingPrompts.js'
 export const DRAWING_INPUT_SIZE = 28
 export const DRAWING_INPUT_SIZES = [28, 256]
 
+const MODEL_URL = 'https://raw.githubusercontent.com/yining1023/doodleNet/master/demo/DoodleClassifier_345/model/model.json'
+const LABELS_URL = 'https://raw.githubusercontent.com/yining1023/doodleNet/master/demo/DoodleClassifier_345/model/class_names.txt'
+
 export const DRAWING_MODEL_DOWNLOADS = {
   28: {
     localPath: 'public/models/drawing/28/',
     remoteEnv: 'VITE_QUICKDRAW_MODEL_URL_28',
-    remoteUrl: import.meta.env.VITE_QUICKDRAW_MODEL_URL_28,
+    remoteUrl: import.meta.env.VITE_QUICKDRAW_MODEL_URL_28 || MODEL_URL,
+    remoteLabelsUrl: LABELS_URL,
   },
   256: {
     localPath: 'public/models/drawing/256/',
@@ -74,10 +78,17 @@ export function createDemoClassifier() {
   }
 }
 
-async function tryLoadModel(base, size) {
-  const meta = await fetch(`${base}/metadata.json`)
-  if (!meta.ok) throw new Error('no metadata')
-  const { classes } = await meta.json()
+async function tryLoadModel(base, size, labelsUrl) {
+  let classes
+  if (labelsUrl) {
+    const labelsResponse = await fetch(labelsUrl)
+    if (!labelsResponse.ok) throw new Error('could not load class labels')
+    classes = (await labelsResponse.text()).split(/\r?\n/).map((label) => label.trim()).filter(Boolean)
+  } else {
+    const meta = await fetch(`${base}/metadata.json`)
+    if (!meta.ok) throw new Error('no metadata')
+    ;({ classes } = await meta.json())
+  }
   if (!Array.isArray(classes) || classes.length === 0) throw new Error('metadata has no classes')
   const tf = await loadTensorFlow()
   const model = await tf.loadLayersModel(`${base}/model.json`)
@@ -107,11 +118,15 @@ export async function loadDrawingClassifier(size = DRAWING_INPUT_SIZE) {
   const candidates = [{ base: `${root}/${size}`, source: 'local' }]
   if (size === 28) candidates.push({ base: root, source: 'local' })
   const remote = DRAWING_MODEL_DOWNLOADS[size]?.remoteUrl
-  if (remote) candidates.push({ base: remote.replace(/\/model\.json$/, ''), source: 'remote' })
+  if (remote) candidates.push({
+    base: remote.replace(/\/model\.json$/, ''),
+    source: 'remote',
+    labelsUrl: DRAWING_MODEL_DOWNLOADS[size]?.remoteLabelsUrl,
+  })
   const failures = []
-  for (const { base, source } of candidates) {
+  for (const { base, source, labelsUrl } of candidates) {
     try {
-      return { classifier: await tryLoadModel(base, size), source }
+      return { classifier: await tryLoadModel(base, size, labelsUrl), source }
     } catch (error) {
       failures.push(`${base}: ${error.message}`)
     }

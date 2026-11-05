@@ -49,15 +49,29 @@ export default function App() {
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-arcade-bg text-white' : 'bg-slate-100 text-slate-900'}`}>
       <style>{`
+        [data-app-theme="light"] {
+          --arcade-background: #f1f5f9;
+          --arcade-card: #ffffff;
+        }
         [data-app-theme="light"] [class~="text-white"],
         [data-app-theme="light"] [class~="text-gray-100"],
-        [data-app-theme="light"] [class~="text-slate-100"] { color: #1e293b !important; }
+        [data-app-theme="light"] [class~="text-slate-100"],
+        [data-app-theme="light"] p { color: #1e293b !important; }
+        [data-app-theme="light"] span { color: #1e293b !important; }
+        [data-app-theme="light"] dt { color: #1e293b !important; }
         [data-app-theme="light"] [class~="bg-arcade-bg"],
         [data-app-theme="light"] [class~="bg-slate-900"],
+        [data-app-theme="light"] [class~="bg-slate-800"],
         [data-app-theme="light"] [class~="bg-gray-900"],
+        [data-app-theme="light"] [class~="bg-gray-800"],
         [data-app-theme="light"] [class~="bg-black"] { background-color: #f1f5f9 !important; }
         [data-app-theme="light"] [class~="border-slate-700"],
         [data-app-theme="light"] [class~="border-gray-700"] { border-color: #cbd5e1 !important; }
+        [data-app-theme="light"] .btn-ghost {
+          color: #334155 !important;
+          border-color: #cbd5e1 !important;
+        }
+        [data-app-theme="light"] .btn-ghost:hover { background-color: #e2e8f0 !important; }
       `}</style>
       <div data-app-theme={darkMode ? 'dark' : 'light'} className="min-h-screen">
       <button
